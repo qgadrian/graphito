@@ -32,12 +32,14 @@ defmodule GraphitoTest do
     end
 
     test "when the response code is not a 200 then an error is returned" do
+      error_body = %{"data" => nil, "errors" => [@default_error_message]}
+
       mock(fn %{method: :post} ->
-        %Tesla.Env{status: 223, body: "an error happen"}
+        %Tesla.Env{status: 223, body: Poison.encode!(error_body)}
       end)
 
       assert Graphito.run("a_query") ==
-               error_response(reason: 223, errors: [%{"message" => "an error happen"}])
+               error_response(reason: 223, errors: [%{"message" => error_body}])
     end
 
     test "when using opts then the opts are using in the request" do
@@ -45,7 +47,7 @@ defmodule GraphitoTest do
                 method: :post,
                 url: "a_host",
                 query: [a_key: "a_value"],
-                headers: %{"a_header" => "a_value", "content-type" => "application/graphql"}
+                headers: [{"a_header", "a_value"}, {"content-type", "application/graphql"}]
               } ->
         %Tesla.Env{
           status: 200,
@@ -57,7 +59,7 @@ defmodule GraphitoTest do
                "a_query",
                url: "a_host",
                query: [a_key: "a_value"],
-               headers: %{"a_header" => "a_value"}
+               headers: [{"a_header", "a_value"}]
              ) == sucess_response()
     end
   end
@@ -79,7 +81,7 @@ defmodule GraphitoTest do
         data: @fake_data,
         status: 200,
         errors: nil,
-        headers: %{}
+        headers: []
       }
     }
   end

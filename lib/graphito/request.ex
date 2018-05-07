@@ -3,11 +3,9 @@ defmodule Graphito.Request do
 
   use Tesla, docs: false
 
-  plug(Tesla.Middleware.Tuples)
-
   alias Graphito.Response
 
-  @default_headers %{"content-type" => "application/graphql"}
+  @default_headers [{"content-type", "application/graphql"}]
 
   @spec send(String.t(), Graphito.Behaviour.opts()) :: any()
   def send(operation_string, opts \\ []) do
@@ -15,10 +13,8 @@ defmodule Graphito.Request do
     query = Keyword.get(opts, :query, [])
 
     headers =
-      opts
-      |> Keyword.get(:headers, %{})
-      |> Map.merge(@default_headers)
-      |> Map.merge(Application.get_env(:graphito, :headers, %{}))
+      Keyword.get(opts, :headers, []) ++
+        @default_headers ++ Application.get_env(:graphito, :headers, [])
 
     opts =
       Keyword.new()

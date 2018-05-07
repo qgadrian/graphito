@@ -21,7 +21,7 @@ defmodule Graphito.Response do
 
   @spec handle({:ok, Tesla.Env.t()}) :: {:ok, t()}
   def handle({:ok, %{status: 200} = response}) do
-    response_data = Poison.decode!(response.body)
+    response_data = parse_body(response)
 
     {
       :ok,
@@ -39,7 +39,7 @@ defmodule Graphito.Response do
       :error,
       %Error{
         reason: response.status,
-        errors: [%{"message" => response.body}]
+        errors: [%{"message" => parse_body(response)}]
       }
     }
   end
@@ -54,4 +54,6 @@ defmodule Graphito.Response do
       }
     }
   end
+
+  defp parse_body(response), do: Poison.decode!(response.body)
 end

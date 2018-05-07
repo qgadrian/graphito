@@ -60,7 +60,7 @@ defmodule Graphito.MixProject do
       {:ex_doc, ">= 0.0.0", only: :dev},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
       {:git_hooks, "~> 0.1.1"},
-      {:tesla, "0.10.0"},
+      {:tesla, "1.0.0-beta.1"},
       {:poison, "~> 3.1"}
     ]
   end

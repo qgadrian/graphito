@@ -11,7 +11,7 @@ defmodule Graphito.Behaviour do
   - url: The GraphQL host url.
   """
   @type opts :: [
-          headers: map(),
+          headers: Keyword.t(),
           query: Keyword.t(),
           url: String.t()
         ]
