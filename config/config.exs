@@ -19,4 +19,6 @@ config :git_hooks,
     ]
   ]
 
-import_config "#{Mix.env()}.exs"
+if Mix.env() == :test do
+  config :tesla, adapter: Tesla.Mock
+end
