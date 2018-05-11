@@ -20,7 +20,7 @@ Add to dependencies in your `mix.exs` file...
 
 ```elixir
 def deps do
-  [{:graphito, "~> 0.1.0"}]
+  [{:graphito, "~> 0.1.1"}]
 end
 ```
 
@@ -62,7 +62,7 @@ iex> Graphito.run("""
 %Graphito.Response{data: %{"jedis" => [%{"name" => "luke"}]}, status: 200, errors: nil, headers: [{"content-type", "application/json"}]}
 ```
 
-If an operation fails the errors are returned:
+If an operation fails the errors are parsed and returned:
 
 ```elixir
 iex> Graphito.run("""
@@ -74,6 +74,16 @@ iex> Graphito.run("""
   """)
 
 %Graphito.Response{data: nil, status: 200, errors: [%{"message" => "Cannot query field \"lightzaber\" on type \"Jedi\". Did you mean \"lightsaber\"?"}], headers: [{"content-type", "application/json"}]}
+
+iex> Graphito.run("""
+  query {
+    jedis {
+      lightsaber
+    }
+  }
+  """)
+
+%Graphito.Response{data: nil, status: 200, errors: [%{"message" => "Third party server timeout", "code" => 503}], headers: [{"content-type", "application/json"}]}
 ```
 
 If something fails an error is returned:

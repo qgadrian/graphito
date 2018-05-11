@@ -35,13 +35,24 @@ defmodule Graphito.Response do
   end
 
   def handle({:ok, response}) do
-    {
-      :error,
-      %Error{
-        reason: response.status,
-        errors: [%{"message" => response.body}]
+    with {:ok, response_data} <- Poison.decode(response.body) do
+      {
+        :error,
+        %Error{
+          reason: response.status,
+          errors: Map.get(response_data, "errors")
+        }
       }
-    }
+    else
+      _ ->
+        {
+          :error,
+          %Error{
+            reason: response.status,
+            errors: [%{"message" => "Unable to parse error response: #{response.body}"}]
+          }
+        }
+    end
   end
 
   @spec handle({:error, %{reason: any()}}) :: {:error, Error.t()}

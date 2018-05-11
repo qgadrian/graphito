@@ -37,7 +37,29 @@ defmodule GraphitoTest do
       end)
 
       assert Graphito.run("a_query") ==
-               error_response(reason: 223, errors: [%{"message" => "an error happen"}])
+               error_response(
+                 reason: 223,
+                 errors: [%{"message" => "Unable to parse error response: an error happen"}]
+               )
+    end
+
+    test "when an error response have the configured error keys to fetch then an error with the configured keys is returned" do
+      mock(fn %{method: :post} ->
+        %Tesla.Env{
+          status: 503,
+          body:
+            Poison.encode!(%{
+              "data" => nil,
+              "errors" => [%{"message" => "an_error", "code" => "a_code"}]
+            })
+        }
+      end)
+
+      assert Graphito.run("a_query") ==
+               error_response(
+                 reason: 503,
+                 errors: [%{"message" => "an_error", "code" => "a_code"}]
+               )
     end
 
     test "when using opts then the opts are using in the request" do
