@@ -20,7 +20,7 @@ Add to dependencies in your `mix.exs` file...
 
 ```elixir
 def deps do
-  [{:graphito, "~> 0.1.1"}]
+  [{:graphito, "~> 0.1.2"}]
 end
 ```
 
