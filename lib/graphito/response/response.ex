@@ -1,8 +1,18 @@
 defmodule Graphito.Response do
-  @moduledoc false
+  @moduledoc """
+  Reponse from a GraphQL request.
+  """
 
   alias Graphito.Response.Error
 
+  @typedoc """
+  The response finormation from a GraphQL operation:
+
+    - data: The data response
+    - errors: The errors response
+    - status: The HTTP status from the server response
+    - headers: The HTTP headers sent in the server response
+  """
   @type t :: %__MODULE__{
           data: map(),
           status: non_neg_integer,
