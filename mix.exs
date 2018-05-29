@@ -1,7 +1,7 @@
 defmodule Graphito.MixProject do
   use Mix.Project
 
-  @version "0.1.2"
+  @version "0.1.3"
 
   def project do
     [
@@ -59,7 +59,7 @@ defmodule Graphito.MixProject do
       {:excoveralls, "~> 0.8", only: :test},
       {:ex_doc, ">= 0.0.0", only: :dev},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
-      {:git_hooks, "~> 0.1.1"},
+      {:git_hooks, "~> 0.2"},
       {:tesla, "0.10.0"},
       {:poison, "~> 3.1"}
     ]
