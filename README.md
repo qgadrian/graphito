@@ -62,6 +62,23 @@ iex> Graphito.run("""
 %Graphito.Response{data: %{"jedis" => [%{"name" => "luke"}]}, status: 200, errors: nil, headers: [{"content-type", "application/json"}]}
 ```
 
+A query response can be mapper to a given struct:
+
+```elixir
+iex> Graphito.run("""
+  query {
+    jedis {
+      name
+      friends {
+        name
+      }
+    }
+  }
+  """, as: %Jedi{friends: %Jedi{}})
+
+%Graphito.Response{data: [%Jedi{name: "Luke", friends: [%Jedi{name: "Yoda"}]}, %Jedi{name: "Leia", friends: [%Jedi{name: "Hans"}]}]}, status: 200, errors: nil, headers: [{"content-type", "application/json"}]}
+```
+
 If an operation fails the errors are parsed and returned:
 
 ```elixir

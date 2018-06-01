@@ -20,13 +20,13 @@ defmodule Graphito.Request do
       |> Map.merge(@default_headers)
       |> Map.merge(Application.get_env(:graphito, :headers, %{}))
 
-    opts =
+    req_opts =
       Keyword.new()
       |> Keyword.put(:query, query)
       |> Keyword.put(:headers, headers)
 
     host
-    |> post(operation_string, opts)
-    |> Response.handle()
+    |> post(operation_string, req_opts)
+    |> Response.handle(opts)
   end
 end

@@ -3,6 +3,8 @@ defmodule Graphito.Response do
   Reponse from a GraphQL request.
   """
 
+  use Graphito.Util.StructMapper
+
   alias Graphito.Response.Error
 
   @typedoc """
@@ -29,22 +31,46 @@ defmodule Graphito.Response do
 
   defstruct @enforce_keys
 
-  @spec handle({:ok, Tesla.Env.t()}) :: {:ok, t()}
-  def handle({:ok, %{status: 200} = response}) do
-    response_data = Poison.decode!(response.body)
+  @spec handle({:ok, Tesla.Env.t()}, keyword) :: {:ok, t()}
+  def handle({:ok, %{status: 200} = response}, opts) do
+    response_body = Poison.decode!(response.body)
+
+    response_data = Map.get(response_body, "data", %{})
+
+    data =
+      case opts[:as] do
+        nil ->
+          response_data
+
+        %_{} = struct ->
+          case response_data do
+            data when is_list(data) ->
+              response.body
+              |> Poison.decode!(as: %{"data" => [struct]})
+              |> Map.get("data", [])
+
+            _ ->
+              response.body
+              |> Poison.decode!(as: %{"data" => struct})
+              |> Map.get("data", %{})
+          end
+
+        invalid_struct ->
+          raise "Invalid struct: #{inspect(invalid_struct)}"
+      end
 
     {
       :ok,
       %__MODULE__{
         status: response.status,
-        data: Map.get(response_data, "data", %{}),
-        errors: Map.get(response_data, "errors"),
+        data: data,
+        errors: Map.get(response_body, "errors"),
         headers: response.headers
       }
     }
   end
 
-  def handle({:ok, response}) do
+  def handle({:ok, response}, _opts) do
     with {:ok, response_data} <- Poison.decode(response.body) do
       {
         :error,
@@ -65,8 +91,8 @@ defmodule Graphito.Response do
     end
   end
 
-  @spec handle({:error, %{reason: any()}}) :: {:error, Error.t()}
-  def handle({:error, response}) do
+  @spec handle({:error, %{reason: any}}, keyword) :: {:error, Error.t()}
+  def handle({:error, response}, _opts) do
     {
       :error,
       %Error{

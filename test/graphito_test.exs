@@ -1,3 +1,8 @@
+defmodule GraphitoTest.Jedi do
+  @moduledoc false
+  defstruct [:name, :surname, friends: []]
+end
+
 defmodule GraphitoTest do
   @moduledoc false
 
@@ -5,12 +10,78 @@ defmodule GraphitoTest do
 
   import Tesla.Mock
 
-  @fake_data %{"some" => "data"}
+  @mock_data_luke %{"name" => "Luke", "surname" => "Skywalker"}
+  @mock_data_luke_struct %GraphitoTest.Jedi{name: "Luke", surname: "Skywalker"}
+  @mock_data_leia %{"name" => "Leia", "surname" => "Organa", "friends" => [@mock_data_luke]}
+  @mock_data_leia_struct %GraphitoTest.Jedi{
+    name: "Leia",
+    surname: "Organa",
+    friends: [@mock_data_luke_struct]
+  }
+  @jedi_as_struct %GraphitoTest.Jedi{friends: [%GraphitoTest.Jedi{}]}
 
   @default_reason :an_error
   @default_error_message %{"message" => "an_error"}
 
   describe "Given a document query" do
+    test "when the query is sucessful then the result is returned" do
+      mock(fn _ ->
+        %Tesla.Env{
+          status: 200,
+          body: Poison.encode!(%{"data" => @mock_data_luke})
+        }
+      end)
+
+      assert Graphito.run("a_query") == sucess_response()
+    end
+
+    test "when should convert the response then a struct with the result data is returned" do
+      mock(fn _ ->
+        %Tesla.Env{
+          status: 200,
+          body: Poison.encode!(%{"data" => @mock_data_luke})
+        }
+      end)
+
+      assert Graphito.run("a_query", as: @jedi_as_struct) ==
+               sucess_response(@mock_data_luke_struct)
+    end
+
+    test "when should convert a list response then a struct list with the results data is returned" do
+      mock(fn _ ->
+        %Tesla.Env{
+          status: 200,
+          body: Poison.encode!(%{"data" => [@mock_data_luke, @mock_data_leia]})
+        }
+      end)
+
+      assert Graphito.run("a_query", as: @jedi_as_struct) ==
+               sucess_response([@mock_data_luke_struct, @mock_data_leia_struct])
+    end
+
+    test "when using opts then they are using in the request" do
+      mock(fn %{
+                method: :post,
+                url: "a_host",
+                query: [a_key: "a_value"],
+                headers: %{"a_header" => "a_value", "content-type" => "application/graphql"}
+              } ->
+        %Tesla.Env{
+          status: 200,
+          body: Poison.encode!(%{"data" => @mock_data_luke})
+        }
+      end)
+
+      assert Graphito.run(
+               "a_query",
+               url: "a_host",
+               query: [a_key: "a_value"],
+               headers: %{"a_header" => "a_value"}
+             ) == sucess_response()
+    end
+  end
+
+  describe "Given a failing query" do
     test "when it is not valid then an error is returned" do
       invalid_query_error =
         error_response(reason: :invalid_operation, errors: [%{"mesage" => "Invalid operation"}])
@@ -24,7 +95,7 @@ defmodule GraphitoTest do
       mock(fn %{method: :post} ->
         %Tesla.Env{
           status: 200,
-          body: Poison.encode!(%{"data" => @fake_data})
+          body: Poison.encode!(%{"data" => @mock_data_luke})
         }
       end)
 
@@ -61,27 +132,6 @@ defmodule GraphitoTest do
                  errors: [%{"message" => "an_error", "code" => "a_code"}]
                )
     end
-
-    test "when using opts then the opts are using in the request" do
-      mock(fn %{
-                method: :post,
-                url: "a_host",
-                query: [a_key: "a_value"],
-                headers: %{"a_header" => "a_value", "content-type" => "application/graphql"}
-              } ->
-        %Tesla.Env{
-          status: 200,
-          body: Poison.encode!(%{"data" => @fake_data})
-        }
-      end)
-
-      assert Graphito.run(
-               "a_query",
-               url: "a_host",
-               query: [a_key: "a_value"],
-               headers: %{"a_header" => "a_value"}
-             ) == sucess_response()
-    end
   end
 
   defp error_response(opts) do
@@ -94,11 +144,11 @@ defmodule GraphitoTest do
     }
   end
 
-  defp sucess_response do
+  defp sucess_response(data \\ @mock_data_luke) do
     {
       :ok,
       %Graphito.Response{
-        data: @fake_data,
+        data: data,
         status: 200,
         errors: nil,
         headers: %{}
