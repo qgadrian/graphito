@@ -43,7 +43,7 @@ Additionally, headers can be configured and they will be sent in all requests.
 
 ```elixir
 config :graphito,
-  headers: [{"this_header", "is_always_to_be_send"}]
+  headers: [{"this_header", "is_always_sent"}]
 ```
 
 ## Usage
